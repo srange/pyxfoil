@@ -4,7 +4,7 @@ cwd = os.getcwd() + '/'
 
 def get_polar_info(filename):
     os.chdir(cwd)
-    polarcontents = file(cwd + 'savedpolars/' + filename, 'r').readlines()
+    polarcontents = open(cwd + 'savedpolars/' + filename, 'r').readlines()
     naca = polarcontents[3].rstrip()[-4:]
     re = eval(polarcontents[8][24:43].strip().replace(' ', ''))
     lastalfa = polarcontents[-1].lstrip().split()[0]
@@ -16,7 +16,7 @@ def get_polar_info(filename):
 
 def histogram(filename='divplot', threshold=5.0):
     os.chdir(cwd)
-    plotfile = file(filename + '.txt', 'w')
+    plotfile = open(filename + '.txt', 'w')
     printables = [f for f in os.listdir(cwd + 'savedpolars/') if f.endswith('.pol')]
     plotfile.write('Threshold at ' + str(threshold))
 
@@ -28,7 +28,7 @@ def histogram(filename='divplot', threshold=5.0):
             plotdict[n] = dict()
         plotdict[n][r] = a
 
-    maxdigits = len(str(max(map(int, plotdict[plotdict.keys()[0]].keys()))))
+    maxdigits = len(str(max(list(map(int, list(plotdict[list(plotdict.keys())[0]].keys()))))))
 
     for naca in sorted(plotdict.keys()):
         plotfile.write('\n\n ' + '#'*15 + ' Airfoil: ' + naca + ' ' + '#'*15)

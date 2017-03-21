@@ -15,7 +15,7 @@ def polarname(naca, re):
     return "NACA" + naca + "_Re" + str(int(float(re)/1000)).zfill(8) + "k.pol" 
 
 def clean_line(line):
-    print line.rstrip().split('//')[0]
+    print(line.rstrip().split('//')[0])
     return line.rstrip().split('//')[0]
 
 if len(sys.argv) == 2:
@@ -24,8 +24,8 @@ else:
     raw_file = open("diverged_raw.txt", 'r')
 
 raws = [clean_line(l) for l in raw_file.readlines() if (len(clean_line(l))>0 and '+' not in l)]
-print "number of points: " + str(len(raws))
-print raws[0]
+print("number of points: " + str(len(raws)))
+print(raws[0])
 
 failed_zeros = ['// airfoil, re pairs where xfoil failed to converge by cl and step zero']
 div_processed = ['\n// last points where xfoil converged']
@@ -63,15 +63,15 @@ for key in sorted(processed.keys()):
                 except IOError:
                     div_early.append('{' + "'airfoil': '" + str(key[0]) + "', 're': " + str(key[1]) + ", 'a': " + str(processed[key]) + '}')
         except IOError:
-            print "file " + file_name + " does not exist"
+            print("file " + file_name + " does not exist")
             div_early.append('{' + "'airfoil': '" + str(key[0]) + "', 're': " + str(key[1]) + ", 'a': " + str(processed[key]) + '}')
     div_processed.append('{' + "'airfoil': '" + str(key[0]) + "', 're': " + str(key[1]) + ", 'a': " + str(processed[key]) + '}')
 
-file("failed_zeros.txt", "w").write('\n'.join(failed_zeros))
-file("diverged.txt", "w").write('\n'.join(failed_zeros))
-file("diverged.txt", "a").write('\n'.join(div_processed))
-file("early_diverged.txt", "w").write('\n'.join(div_early))
-print str(len(raws)).rjust(6) + " points sorted (including duplicates)"
-print str(len(failed_zeros)).rjust(6) + " unique points written to failed_zeros.txt"
-print str(len(div_early)).rjust(6) + " unique points written to early_diverged.txt"
-print str(len(div_processed)).rjust(6) + " total unique points of non-convergence"
+open("failed_zeros.txt", "w").write('\n'.join(failed_zeros))
+open("diverged.txt", "w").write('\n'.join(failed_zeros))
+open("diverged.txt", "a").write('\n'.join(div_processed))
+open("early_diverged.txt", "w").write('\n'.join(div_early))
+print(str(len(raws)).rjust(6) + " points sorted (including duplicates)")
+print(str(len(failed_zeros)).rjust(6) + " unique points written to failed_zeros.txt")
+print(str(len(div_early)).rjust(6) + " unique points written to early_diverged.txt")
+print(str(len(div_processed)).rjust(6) + " total unique points of non-convergence")

@@ -29,12 +29,12 @@ ls = os.popen("ls").readlines()
 polar_list = [l.rstrip()[:-9] for l in os.popen("ls").readlines() if l[:4]=="NACA" and "aug" in l]
 
 for pol in polar_list:
-    polar_default = file(pol + '.pol', 'r').readlines()[:12]
-    polar_original = file(pol + '.pol', 'r').readlines()
-    polar_augment = file(pol + '_aug1.pol', 'r').readlines()
+    polar_default = open(pol + '.pol', 'r').readlines()[:12]
+    polar_original = open(pol + '.pol', 'r').readlines()
+    polar_augment = open(pol + '_aug1.pol', 'r').readlines()
     os.popen('mv ' + pol + '.pol mergedump')
     os.popen('mv ' + pol + '_aug1.pol mergedump')
-    file(pol + '.pol', 'w').write(''.join(l for l in polar_default) + interleave(polar_original[12:], polar_augment[12:]))
+    open(pol + '.pol', 'w').write(''.join(l for l in polar_default) + interleave(polar_original[12:], polar_augment[12:]))
 
 def merge_filled(polardir):
     os.chdir(polardir)

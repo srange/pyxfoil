@@ -1,7 +1,7 @@
 import pexpect 
 import os
 import re as regexp
-import StringIO
+import io
 from datetime import datetime as dt
 from decimal import *
 
@@ -39,9 +39,9 @@ class session:
             nowstr = dt.strftime(dt.now(), '%Y_%m_%d_%H%M%S')
             if(logfile != ''):
                 logfile = '_' + logfile
-            logfile = file(self.logdir + 'XFOILsession' + nowstr + logfile + '.txt', 'w')
-            self.divfile = file(self.logdir + div_filename, 'a')
-        self.proc = pexpect.spawn(xfoil_start_cmd, logfile=logfile) 
+            logfile = open(self.logdir + 'XFOILsession' + nowstr + logfile + '.txt', 'w')
+            self.divfile = open(self.logdir + div_filename, 'a')
+        self.proc = pexpect.spawn(xfoil_start_cmd, logfile=logfile, encoding='utf-8') 
         self.proc.expect('c>')
 
         if not self.plots:
@@ -227,7 +227,7 @@ class session:
         self.send('pacc', 's>') #turn on polar accumulation
         self.send(savefile, 's>') #xfoil will print polar to this file
         if('Old polar save file available for appending' in self.proc.before):
-            print 'Polar file ' + savefile + ' exists; XFOIL will append'
+            print('Polar file ' + savefile + ' exists; XFOIL will append')
         self.send(dumpfile)   #prompt returns to default after this (c>)
         self.bpacc = True
         self.polar_savefile = savefile
@@ -276,7 +276,7 @@ class session:
             out = output(self.proc.before)
             if out.converged:
                 if count > 0:
-                    print "a = " + str(a) + " converged after " + str(count) + " tries"
+                    print("a = " + str(a) + " converged after " + str(count) + " tries")
                 break
             #if "to continue iterating" in self.proc.before:
                 #self.send("!")
@@ -346,7 +346,7 @@ class session:
             reynolds = self.re
 
         polarname = naca + '_Re' + Decimal(reynolds/1000).to_eng_string().zfill(8) + 'k.pol'
-        print polarname
+        print(polarname)
         return open(polarname, 'w')        
 
     def parse(self, output):
@@ -369,32 +369,32 @@ class session:
         """
 
         os.chdir(self.output_dir)
-        print "***\nAirfoil = " + self.airfoil + " Re = " + str(self.re)
+        print("***\nAirfoil = " + self.airfoil + " Re = " + str(self.re))
 
         if start_value == None:
             try:
                 #attemp to zero by calling cl with small values
                 angle = self.zero_cl()
-                print "CL successfully zeroed: a = " + str(angle)
+                print("CL successfully zeroed: a = " + str(angle))
             except XfoilError:
                 if self.force_zero:
                     #step angle backwards until cl goes negative
-        	    try:
+                    try:
                         angle = self.step_zero(step_size=.2, tries=35)
                     except XfoilError:
-                        print "CL step-zeroing failed, recording failure and aborting."
+                        print("CL step-zeroing failed, recording failure and aborting.")
                         if self.logs_on:
                             self.divfile.write('\n&' + str({'airfoil':self.airfoil, 're':self.re}))
                         return None 
-                    print "CL step-zeroed to: a = " +  str(angle) + " by stepping back from a=0"
+                    print("CL step-zeroed to: a = " +  str(angle) + " by stepping back from a=0")
                 else:
-                    print "CL zeroing failed, recording faiure and aborting."
+                    print("CL zeroing failed, recording faiure and aborting.")
                     if self.logs_on:
                         self.divfile.write('\n@' + str({'airfoil':self.airfoil, 're':self.re}))
                     return None
         else:
             angle = start_value
-            print "Beginning simulation at a = " + str(angle)
+            print("Beginning simulation at a = " + str(angle))
 
         if writefile and not self.bpacc:
             self.pacc_on(savefile=filename)
@@ -419,7 +419,7 @@ class session:
                 if writefile and not current_output.point_added:
                     if self.logs_on:
                         self.divfile.write('\n+' + str({'airfoil':self.airfoil, 're':self.re, 'a':angle}))
-                    print "failed to record to polar: a = " + str(angle)
+                    print("failed to record to polar: a = " + str(angle))
                     angle += alfa_step
                     continue
 
@@ -427,10 +427,10 @@ class session:
                     cl_max = last_cl
                     cl_max_angle = angle
                 elif (last_cl > min_cl or angle > min_alfa) and last_cl < cl_max - .05:
-                    print "aborting at cl = " + str(last_cl) + ", a = " + str(angle) + ": past peak " + str(cl_max) + ", " + str(cl_max_angle)
+                    print("aborting at cl = " + str(last_cl) + ", a = " + str(angle) + ": past peak " + str(cl_max) + ", " + str(cl_max_angle))
                     break
                 elif (last_cl > min_cl or angle > min_alfa) and angle > 1 + cl_max_angle:
-                    print "aborting at cl = " + str(last_cl) + ", a = " + str(angle) + ": past peak " + str(cl_max) + ", " + str(cl_max_angle)
+                    print("aborting at cl = " + str(last_cl) + ", a = " + str(angle) + ": past peak " + str(cl_max) + ", " + str(cl_max_angle))
                     break
 
             else:
@@ -441,7 +441,7 @@ class session:
 
                 if last_cl < cl_max and (last_cl > min_cl or angle > min_alfa):
                     #passed minimum alfa or cl and dipped lower in cl indicates stall
-                    print "aborting at a = " + str(angle) + ": failed to converge after peaking"
+                    print("aborting at a = " + str(angle) + ": failed to converge after peaking")
                     break
 
                 elif (last_cl > min_cl or angle > min_alfa):
@@ -449,18 +449,18 @@ class session:
                         if self.logs_on:
                             self.divfile.write('\n' + str({'airfoil':self.airfoil, 're':self.re, 'a': angle}))
                         skips += 1
-                        print "skipping a = " + str(angle) + ": skips so far: " + str(skips)
+                        print("skipping a = " + str(angle) + ": skips so far: " + str(skips))
                     else:
-                        print "Aborting at a = " + str(last_converged) + ": failed to converge after two skips"
+                        print("Aborting at a = " + str(last_converged) + ": failed to converge after two skips")
                         break
 
                 else:
-                    print "skipping a = " + str(angle) + ": failed to converge"
+                    print("skipping a = " + str(angle) + ": failed to converge")
                     self.divfile.write('\n' + str({'airfoil':self.airfoil, 're':self.re, 'a': angle}))
 
             angle += alfa_step
         
-        print "Exiting simulation at a = " + str(last_converged)
+        print("Exiting simulation at a = " + str(last_converged))
         if self.bpacc:
             self.pacc_off()
         self.init()
@@ -502,10 +502,10 @@ class output:
             self.point_added = True
             self.data = last3[2]
             if('rms:' not in self.data):
-                print self.raw
+                print(self.raw)
                 raise XfoilError('Could not find data in output.')
         else:
-            print last3
+            print(last3)
             raise XfoilError('Unexpected last3 in output.  Printed Above.')
         #we now have data in self.data
         self.converged = 'Convergence failed' not in self.data

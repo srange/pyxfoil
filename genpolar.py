@@ -1,4 +1,4 @@
-import sys, os
+import sys, os, traceback
 from decimal import *
 import pexpect, time, shutil, code, numpy
 
@@ -11,16 +11,16 @@ input_args = sys.argv[1:]
 homedir = os.getcwd() + '/'
 
 if len(input_args) == 0:
-    print "No directory specified:"
-    run_dir = raw_input("Enter a run directory >> " ).rstrip('/')
+    print("No directory specified:")
+    run_dir = input("Enter a run directory >> " ).rstrip('/')
 else:
     run_dir = input_args[0].rstrip('/')
 
 try:
     os.chdir(run_dir)
     cwd = os.getcwd() + '/'
-    runlogfile = file(cwd + 'logs/sessionlog.txt', 'a')
-    print "Existing run loaded: " + run_dir
+    runlogfile = open(cwd + 'logs/sessionlog.txt', 'a')
+    print("Existing run loaded: " + run_dir)
 except OSError:
     try:
         os.mkdir(run_dir)
@@ -33,11 +33,11 @@ except OSError:
         for filename in package_files:
             shutil.copyfile(homedir + 'pyxfoil/' + filename + '.py', 
                             cwd + 'src/' + filename + '.py')
-        runlogfile = file(cwd + 'logs/sessionlog.txt', 'w')
-        print "New run created: " + run_dir
+        runlogfile = open(cwd + 'logs/sessionlog.txt', 'w')
+        print("New run created: " + run_dir)
 
     except OSError:
-        print "Fatal error: directory " + run_dir + " not found and could not be created."
+        print("Fatal error: directory " + run_dir + " not found and could not be created.")
         sys.exit(0)
 finally:
     sys.path.append(cwd)
@@ -89,7 +89,7 @@ def sweep(airfoils, res, min_alfa=4, write_file=True, plots_on=False, panels=200
             percentage = 100*round((airfoils.index(naca)*len(res)+res.index(re)+1.)/(len(airfoils)*len(res)), 5)
             polarname = "NACA" + naca + "_Re" + str(int(round(re/1000))).zfill(8) + "k.pol"
             if polarname in get_existing():
-                print "NACA " + naca + " Re " + (str(int(re/1000)) + 'k').rjust(8) + " has already been run: skipping (" + str(percentage) + "%)"
+                print("NACA " + naca + " Re " + (str(int(re/1000)) + 'k').rjust(8) + " has already been run: skipping (" + str(percentage) + "%)")
                 continue
     
             xf.set_re(re)
@@ -97,25 +97,25 @@ def sweep(airfoils, res, min_alfa=4, write_file=True, plots_on=False, panels=200
                 xf.generate_polar(filename=polarname, min_alfa=min_alfa, writefile=write_file)
                 sessionlog.comment("NACA " + naca + ", re=" + str(re) + " simulation complete.")
                 this_time = time.time()
-                print str(percentage) + "% complete, " + str(round(this_time-last_time, 3)) + " seconds"
+                print(str(percentage) + "% complete, " + str(round(this_time-last_time, 3)) + " seconds")
                 last_time = this_time
             except pexpect.TIMEOUT:
                 xf.force_quit()
-                print "XFOIL timed out at NACA=" + naca + " Re=" + str(re)
+                print("XFOIL timed out at NACA=" + naca + " Re=" + str(re))
                 sessionlog.timeout(naca, re)
                 timeouts += 1
-                print "Attempting to restarting at current set."
+                print("Attempting to restarting at current set.")
                 xf = pyxfoil.session(airfoil=naca, re=re, logfile='sweep', plots=plots_on, force_zero=True)
                 try:
                     xf.generate_polar(filename=polarname, min_alfa=min_alfa, writefile=write_file)
                     sessionlog.comment("NACA " + naca + ", Re=" + str(re) + " recovered on second try.")
                     this_time = time.time()
-                    print str(percentage) + "% complete, " + str(round(this_time-last_time, 3)) + " seconds"
+                    print(str(percentage) + "% complete, " + str(round(this_time-last_time, 3)) + " seconds")
                     last_time = this_time
                 except pexpect.TIMEOUT:
                     xf.force_quit()
                     sessionlog.comment("NACA " + naca + ", Re=" + str(re) + " failed to recover on second try.  Continuing at next set.")
-                    print "NACA " + naca + ", Re=" + str(re) + " failed to recover on second try.  Continuing at next set."
+                    print("NACA " + naca + ", Re=" + str(re) + " failed to recover on second try.  Continuing at next set.")
                     xf = pyxfoil.session(logfile='sweep', plots=plots_on, force_zero=True, airfoil=naca)
 
     xf.quit()
@@ -134,7 +134,7 @@ def sweep(airfoils, res, min_alfa=4, write_file=True, plots_on=False, panels=200
     sessionlog.comment(average_time)
     sessionlog.sweep_param(airfoils, res)
 
-    print timeout_count + '\n' + completion_time + '\n' + simulation_count + '\n' + average_time
+    print(timeout_count + '\n' + completion_time + '\n' + simulation_count + '\n' + average_time)
     os.chdir(cwd)
 
 def fill(threshold=4.0, stepsize=0.25, write_file=True, plots_on=False, panels=200):
@@ -153,7 +153,7 @@ def fill(threshold=4.0, stepsize=0.25, write_file=True, plots_on=False, panels=2
 
     fillable = get_early_div(threshold)
     if len(fillable) == 0:
-        print "Nothing to fill."
+        print("Nothing to fill.")
         return None
 
     xf = pyxfoil.session(div_filename='aug.txt', logfile='fill', plots=plots_on, force_zero=True)
@@ -170,20 +170,20 @@ def fill(threshold=4.0, stepsize=0.25, write_file=True, plots_on=False, panels=2
         percentage = 100*(list(fillable).index(early)+1.)/len(fillable)
         polarname = "NACA" + early['airfoil'] + "_Re" + str(int(round(early['re']/1000))).zfill(8) + "k_aug1.pol"
         if polarname in get_existing():
-            print "NACA " + early['airfoil'] + " Re " + (str(int(early['re']/1000)) + 'k').rjust(8) + " has already been run: skipping (" + str(percentage) + "%)"
+            print("NACA " + early['airfoil'] + " Re " + (str(int(early['re']/1000)) + 'k').rjust(8) + " has already been run: skipping (" + str(percentage) + "%)")
             continue
         try:
             xf.generate_polar(filename=polarname, writefile=write_file, min_alfa=threshold, start_value=early['a'] + stepsize, alfa_step=stepsize)
             sessionlog.comment("NACA " + early['airfoil'] + ", re=" + str(early['re']) + " simulation complete.")
             this_time = time.time()
-            print str(percentage) + "% complete, " + str(round(this_time-last_time, 3)) + " seconds"
+            print(str(percentage) + "% complete, " + str(round(this_time-last_time, 3)) + " seconds")
             last_time = this_time
         except pexpect.TIMEOUT:
             xf.force_quit()
-            print "XFOIL timed out at NACA=" + early['airfoil'] + " Re=" + str(early['re'])
+            print("XFOIL timed out at NACA=" + early['airfoil'] + " Re=" + str(early['re']))
             sessionlog.timeout(early['airfoil'], early['re'])
             timeouts += 1
-            print "Restarting at next set."
+            print("Restarting at next set.")
             xf = pyxfoil.session(div_filename='aug.txt', logfile='fill', plots=plots_on, force_zero=True)
     
     xf.quit()
@@ -202,7 +202,7 @@ def fill(threshold=4.0, stepsize=0.25, write_file=True, plots_on=False, panels=2
     sessionlog.comment(average_time)
     sessionlog.fill_param(fillable)
 
-    print timeout_count + '\n' + completion_time + '\n' + simulation_count + '\n' + average_time
+    print(timeout_count + '\n' + completion_time + '\n' + simulation_count + '\n' + average_time)
     merge()
     plotter.histogram(filename='histogram', threshold=threshold)
     os.chdir(cwd)
@@ -252,9 +252,9 @@ def merge():
     augfiles = [f for f in os.listdir(os.getcwd()) if 'aug' in f]
     files_merged = 0
     for aug in augfiles:
-        polar_header = file(aug, 'r').readlines()[:12]
-        polar_original = file(aug[:20] + '.pol', 'r').readlines()
-        polar_augment = file(aug, 'r').readlines()
+        polar_header = open(aug, 'r').readlines()[:12]
+        polar_original = open(aug[:20] + '.pol', 'r').readlines()
+        polar_augment = open(aug, 'r').readlines()
         try:
             shutil.move(aug[:20] + '.pol', cwd + 'mergedump')
             shutil.move(aug, cwd + 'mergedump')
@@ -263,10 +263,10 @@ def merge():
             os.remove(cwd + 'mergedump/' + aug)
             shutil.move(aug[:20] + '.pol', cwd + 'mergedump')
             shutil.move(aug, cwd + 'mergedump')
-        file(aug[:20] + '.pol', 'w').write(''.join(l for l in polar_header) + interleave(polar_original[12:], polar_augment[12:]))
+        open(aug[:20] + '.pol', 'w').write(''.join(l for l in polar_header) + interleave(polar_original[12:], polar_augment[12:]))
         files_merged += 1
     sessionlog.comment(str(files_merged) + " files merged with their filler files.")
-    print str(files_merged) + " files merged with their filler files."
+    print(str(files_merged) + " files merged with their filler files.")
     os.chdir(cwd)
      
 ########################################
@@ -281,17 +281,18 @@ smallres = Res[20:24]
 smallnacas2 = Nacas[15:16]
 smallres2 = Res[8:12]
 
-inputline = raw_input("Genpolar >> ")
+inputline = input("Genpolar >> ")
 while (inputline.lower() != "quit"):
     try:
         compiled = code.compile_command(inputline, "<stdin>", "exec") 
         if compiled:
             exec(compiled)
     except Exception as e:
-        print e
-        print "Invalid command: " + inputline + " try again."
+        print(e)
+        traceback.print_exc(file=sys.stdout)
+        print("Invalid command: " + inputline + " try again.")
 
-    inputline = raw_input("Genpolar >> ")
+    inputline = input("Genpolar >> ")
 
 sessionlog.close()
 os.chdir(homedir)

@@ -51,8 +51,8 @@ def dir_to_dict(polardir):
 
 def file_to_dict(filepath, prefix=None, strip=False):
     polars = dict()
-    contents = [line.rstrip() for line in file(filepath, 'r').readlines()]
-    filtered = filter(startswith_generator(prefix), contents)
+    contents = [line.rstrip() for line in open(filepath, 'r').readlines()]
+    filtered = list(filter(startswith_generator(prefix), contents))
     for line in filtered:
         if strip:
             line = line.strip(prefix)
@@ -69,7 +69,7 @@ def file_to_dict(filepath, prefix=None, strip=False):
 
 def dict_to_list(polardict):
     polar_list = [{'airfoil': af , 're': re, 'a': a} 
-               for af in polardict.keys()
+               for af in list(polardict.keys())
                for re in sorted(polardict[af].keys())
                for a in polardict[af][re]]
     return polar_list
